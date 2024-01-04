@@ -7,23 +7,35 @@ fs.mkdir(pathToTaskDirectory, err => {
     if (err) throw new Error();
 });
 
-function createDirectory(directoryNumber, nameDirectory) {
-
+function createDirectoryAndFiles(directoryNumber, directoryName, fileName, fileData) {
     for (let i = 1; i <= directoryNumber; i++) {
-        fs.mkdir(path.join(pathToTaskDirectory, `${nameDirectory}-${i}`), err => {
+        fs.mkdir(path.join(pathToTaskDirectory, `${directoryName}-${i}`), err => {
             if (err) throw new Error();
         });
 
-        fs.writeFile(path.join(pathToTaskDirectory, `${nameDirectory}-${i}`, 'text.txt'), 'Hello', err => {
+        fs.writeFile(path.join(pathToTaskDirectory, `${directoryName}-${i}`, `${fileName}-${i}.txt`), `${fileData}-${i}`, err => {
             if (err) throw new Error();
         })
     }
-
 }
 
-createDirectory(5, 'data');
+function isDirectoryOrFile(pathTo) {
+    fs.stat(pathTo, (err, stats) => {
+        if (err) throw new Error();
 
-//
+        if (stats.isFile()) {
+            console.log(`File: ${path.basename(pathTo)}`);
+        } else if (stats.isDirectory()) {
+            console.log(`Directory: ${path.basename(pathTo)}`);
+        }
+    })
+}
+
+createDirectoryAndFiles(5, 'data', 'text', 'Hello world');
+
+isDirectoryOrFile(path.join(pathToTaskDirectory, 'data-2', 'text-2.txt'));
+
+
 // fs.mkdir(path.join(pathToTaskDirectory, 'data-1'), err => {
 //     if (err) throw new Error();
 // });
