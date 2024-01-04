@@ -9,31 +9,57 @@ fs.mkdir(pathToTaskDirectory, err => {
 
 function createDirectoryAndFiles(directoryNumber, directoryName, fileName, fileData) {
     for (let i = 1; i <= directoryNumber; i++) {
-        fs.mkdir(path.join(pathToTaskDirectory, `${directoryName}-${i}`), err => {
+        let nameDir = `${directoryName}-${i}`;
+        let nameFile = `${fileName}-${i}.txt`;
+        let dataFile = `${fileData}-${i}`;
+
+        fs.mkdir(path.join(pathToTaskDirectory, nameDir), err => {
             if (err) throw new Error();
         });
 
-        fs.writeFile(path.join(pathToTaskDirectory, `${directoryName}-${i}`, `${fileName}-${i}.txt`), `${fileData}-${i}`, err => {
+        fs.writeFile(path.join(pathToTaskDirectory, nameDir, nameFile), dataFile, err => {
             if (err) throw new Error();
         })
     }
 }
 
-function isDirectoryOrFile(pathTo) {
-    fs.stat(pathTo, (err, stats) => {
-        if (err) throw new Error();
+function isDirectoryOrFile() {
+    const pathToCheck = getFiles(pathToTaskDirectory);
 
-        if (stats.isFile()) {
-            console.log(`File: ${path.basename(pathTo)}`);
-        } else if (stats.isDirectory()) {
-            console.log(`Directory: ${path.basename(pathTo)}`);
+    for (let i = 0; i < pathToCheck.length; i++) {
+        const normPath = path.normalize(pathToCheck[i]);
+
+        fs.stat(normPath, (err, stats) => {
+            if (err) throw err;
+
+            if (stats.isFile()) {
+                console.log(`File: ${path.basename(normPath)}`);
+            } else if (stats.isDirectory()) {
+                console.log(`Directory: ${path.basename(normPath)}`);
+            }
+        })
+    }
+}
+
+function getFiles(pathToCheckDir, files = []) {
+    const fileList = fs.readdirSync(pathToCheckDir)
+
+    for (const file of fileList) {
+        const name = path.join(pathToCheckDir, file)
+
+        if (fs.statSync(name).isDirectory()) {
+            files.push(name);
+            getFiles(name, files)
+        } else {
+            files.push(name)
         }
-    })
+    }
+
+    return files
 }
 
 createDirectoryAndFiles(5, 'data', 'text', 'Hello world');
-
-isDirectoryOrFile(path.join(pathToTaskDirectory, 'data-2', 'text-2.txt'));
+isDirectoryOrFile();
 
 
 // fs.mkdir(path.join(pathToTaskDirectory, 'data-1'), err => {
