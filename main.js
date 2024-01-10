@@ -1,65 +1,120 @@
-const path = require('path');
-const fs = require('fs');
+const fs = require('node:fs/promises');
+const path = require('node:path');
+const express = require('express');
 
-const pathToTaskDirectory = path.join(__dirname, 'data');
+const pathToUsers = path.join(__dirname, 'users.json');
 
-fs.mkdir(pathToTaskDirectory, err => {
-    if (err) throw new Error();
+const app = express();
+const port = 3000;
+
+app.use(express.json())
+app.use(express.urlencoded({extended: true}))
+
+app.get('/users', async (req, res) => {
+    try {
+        const usersJson = await fs.readFile(pathToUsers, {encoding: 'utf-8'});
+        const users = JSON.parse(usersJson);
+        res.status(200).json({data: users});
+    } catch (e) {
+        res.status(400).json(e.message);
+    }
 });
 
-function createDirectory(directoryNumber, nameDirectory) {
+app.get('/users/:userId', async (req, res) => {
+    try {
+        const userId = req.params.id;
 
-    for (let i = 1; i <= directoryNumber; i++) {
-        fs.mkdir(path.join(pathToTaskDirectory, `${nameDirectory}-${i}`), err => {
-            if (err) throw new Error();
-        });
+        const usersJson = await fs.readFile(pathToUsers, {encoding: 'utf-8'});
+        const users = JSON.parse(usersJson);
+        const userIndex = users.findIndex((user) => user.id === +userId);
 
-        fs.writeFile(path.join(pathToTaskDirectory, `${nameDirectory}-${i}`, 'text.txt'), 'Hello', err => {
-            if (err) throw new Error();
-        })
+        res.json({data: users[userIndex]});
+    } catch (e) {
+        res.status(400).json(e.message);
     }
+});
 
-}
+app.post('/users', async (req, res) => {
+    try {
+        const {email, name, age} = req.body;
 
-createDirectory(5, 'data');
+        if (!age || age <= 0) {
+            throw new Error('incorrectly entered age');
+        }
 
-//
-// fs.mkdir(path.join(pathToTaskDirectory, 'data-1'), err => {
-//     if (err) throw new Error();
-// });
-//
-// fs.writeFile(path.join(pathToTaskDirectory, 'data-1', 'text.txt'), 'Hello', err => {
-//     if (err) throw  new Error();
-// })
-//
-// fs.mkdir(path.join(pathToTaskDirectory, 'data-2'), err => {
-//     if (err) throw new Error();
-// });
-//
-// fs.writeFile(path.join(pathToTaskDirectory, 'data-2', 'text.txt'), 'Hello', err => {
-//     if (err) throw  new Error();
-// })
-//
-// fs.mkdir(path.join(pathToTaskDirectory, 'data-3'), err => {
-//     if (err) throw new Error();
-// });
-//
-// fs.writeFile(path.join(pathToTaskDirectory, 'data-3', 'text.txt'), 'Hello', err => {
-//     if (err) throw  new Error();
-// })
-//
-// fs.mkdir(path.join(pathToTaskDirectory, 'data-4'), err => {
-//     if (err) throw new Error();
-// });
-//
-// fs.writeFile(path.join(pathToTaskDirectory, 'data-4', 'text.txt'), 'Hello', err => {
-//     if (err) throw  new Error();
-// })
-//
-// fs.mkdir(path.join(pathToTaskDirectory, 'data-5'), err => {
-//     if (err) throw new Error();
-// });
-//
-// fs.writeFile(path.join(pathToTaskDirectory, 'data-5', 'text.txt'), 'Hello', err => {
-//     if (err) throw  new Error();
-// })
+        if (!email) {
+            throw new Error('Incorrectly entered e-mail');
+        }
+
+        if (!name || name.length <= 2) {
+            throw new Error('Incorrectly entered name');
+        }
+
+        const usersJson = await fs.readFile(pathToUsers, {encoding: 'utf-8'});
+        const users = JSON.parse(usersJson);
+        const newUser = {id: users[users.length - 1].id + 1, email, name, age};
+
+        users.push(newUser);
+
+        await fs.writeFile(pathToUsers, JSON.stringify(users));
+
+        res.status(201).json({data: newUser});
+    } catch (e) {
+        res.status(400).json(e.message);
+    }
+});
+
+app.delete('/users/:userId', async (req, res) => {
+    try {
+        const userId = req.params.id;
+        const usersJson = await fs.readFile(pathToUsers, {encoding: 'utf-8'});
+        const users = JSON.parse(usersJson);
+        const index = users.findIndex((user) => user.id === +userId);
+
+        users.splice(index, 1);
+        await fs.writeFile(pathToUsers, JSON.stringify(users));
+
+        res.sendStatus(204);
+    } catch (e) {
+        res.status(400).json(e.message);
+    }
+});
+
+app.put('/users/:userId', async (req, res) => {
+    try {
+        const userId = req.params.id;
+        const {email, age, name} = req.body;
+
+        if (!age || age <= 0) {
+            throw new Error('incorrectly entered age');
+        }
+        if (!email) {
+            throw new Error('incorrectly entered email');
+        }
+        if (!name || name.length <= 2) {
+            throw new Error('incorrectly entered name');
+        }
+
+        const usersJson = await fs.readFile(pathToUsers, {encoding: 'utf-8'});
+        const users = JSON.parse(usersJson);
+        const user = users.find((user) => user.id === userId);
+
+        if (!user) {
+            throw new Error('User not found');
+        }
+
+        user.name = name;
+        user.age = age;
+        user.email = email;
+
+        await fs.writeFile(pathToUsers, JSON.stringify(users));
+
+        res.status(201).json(user);
+    } catch (e) {
+        res.status(400).json(e.message);
+    }
+});
+
+app.listen(port, () => {
+    console.log(`Сервер слухає на порту ${port}`);
+});
