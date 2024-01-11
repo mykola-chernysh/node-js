@@ -22,7 +22,7 @@ app.get('/users', async (req, res) => {
 
 app.get('/users/:userId', async (req, res) => {
     try {
-        const userId = req.params.id;
+        const {userId} = req.params;
 
         const usersJson = await fs.readFile(pathToUsers, {encoding: 'utf-8'});
         const users = JSON.parse(usersJson);
@@ -66,7 +66,7 @@ app.post('/users', async (req, res) => {
 
 app.delete('/users/:userId', async (req, res) => {
     try {
-        const userId = req.params.id;
+        const {userId} = req.params;
         const usersJson = await fs.readFile(pathToUsers, {encoding: 'utf-8'});
         const users = JSON.parse(usersJson);
         const index = users.findIndex((user) => user.id === +userId);
@@ -82,7 +82,7 @@ app.delete('/users/:userId', async (req, res) => {
 
 app.put('/users/:userId', async (req, res) => {
     try {
-        const userId = req.params.id;
+        const {userId} = req.params;
         const {email, age, name} = req.body;
 
         if (!age || age <= 0) {
