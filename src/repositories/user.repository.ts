@@ -1,39 +1,31 @@
-import { read, write } from "../fs.service";
-import { IUser } from "../interfaces/user.interface";
+import { FilterQuery } from "mongoose";
+
+import { User } from "../models/user.model";
+import { IUser } from "../types/user.types";
 
 class UserRepository {
   public async getAll(): Promise<IUser[]> {
-    return await read();
+    return await User.find({});
   }
 
-  public async getById(id: number): Promise<IUser> {
-    const users = await read();
-    const index = users.findIndex((user) => user.id === id);
-    const user = users[index];
-
-    return user;
+  public async getById(id: string): Promise<IUser> {
+    return await User.findOne({ _id: id });
   }
 
-  public async writeAll(users: IUser[]): Promise<void> {
-    await write(users);
+  public async getOneByParams(params: FilterQuery<IUser>) {
+    return await User.findOne(params);
   }
 
-  public async create(body: IUser): Promise<IUser> {
-    const { name, age, email } = body;
-    const users = await read();
-
-    const newUser = { id: users[users.length - 1].id + 1, name, age, email };
-
-    return newUser;
+  public async create(dto: Partial<IUser>): Promise<IUser> {
+    return await User.create(dto);
   }
 
-  public async deleteById(id: number): Promise<IUser[]> {
-    const users = await read();
-    const index = users.findIndex((user) => user.id === id);
+  public async deleteById(id: string): Promise<void> {
+    await User.deleteOne({ _id: id });
+  }
 
-    users.splice(index, 1);
-
-    return users;
+  public async updateById(id: string, dto: Partial<IUser>): Promise<IUser> {
+    return await User.findByIdAndUpdate(id, dto, { returnDocument: "after" });
   }
 }
 
