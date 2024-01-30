@@ -31,15 +31,11 @@ class AuthService {
     return jwtTokens;
   }
 
-  public async refresh(dto: Partial<ITokenPair>) {
-    const token = await tokenRepository.getByParams({ refreshToken: dto.refreshToken });
-    if (!token) {
-      throw new ApiError("Token not found", 401);
-    }
+  public async refresh(dto: Partial<ITokenPair>): Promise<ITokenPair> {
+    const tokens = await tokenRepository.getByParams({ refreshToken: dto.refreshToken });
+    const newTokens = tokenService.generateTokenPair({ userId: tokens._userId });
 
-    const newTokens = tokenService.generateTokenPair({ userId: token._userId });
-
-    await tokenRepository.update(token._userId, { ...newTokens, _userId: token._userId });
+    await tokenRepository.update(tokens._userId, { ...newTokens, _userId: tokens._userId });
 
     return newTokens;
   }

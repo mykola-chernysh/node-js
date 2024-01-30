@@ -1,6 +1,7 @@
 import * as jwt from "jsonwebtoken";
 
 import { configs } from "../configs/config";
+import { ApiError } from "../errors/api.error";
 import { ITokenPair, ITokenPayload } from "../types/token.type";
 
 class TokenService {
@@ -12,6 +13,16 @@ class TokenService {
       accessToken,
       refreshToken,
     };
+  }
+
+  public checkRefreshToken(token: string): ITokenPayload {
+    try {
+      const refreshSecret = configs.JWT_REFRESH_SECRET;
+
+      return jwt.verify(token, refreshSecret) as ITokenPayload;
+    } catch (e) {
+      throw new ApiError("Invalid token (service)", 401);
+    }
   }
 }
 
