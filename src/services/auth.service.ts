@@ -1,15 +1,25 @@
+import { Types } from "mongoose";
+
+import { EEmailAction } from "../enums/email-action.enum";
 import { ApiError } from "../errors/api.error";
 import { tokenRepository } from "../repositories/token.repository";
 import { userRepository } from "../repositories/user.repository";
 import { ILogin } from "../types/auth.type";
-import { ITokenPair } from "../types/token.type";
+import { ITokenPair, ITokenPayload } from "../types/token.type";
 import { IUser } from "../types/user.types";
+import { emailService } from "./emai.service";
 import { passwordService } from "./password.service";
 import { tokenService } from "./token.service";
 
 class AuthService {
   public async singUp(dto: Partial<IUser>): Promise<IUser> {
+    const userFromDb = await userRepository.getOneByParams({ email: dto.email });
+    if (userFromDb) {
+      throw new ApiError("User already exists", 400);
+    }
+
     const hashedPassword = await passwordService.hash(dto.password);
+    await emailService.sendMail(dto.email, EEmailAction.WELCOME, { name: dto.name });
 
     return await userRepository.create({ ...dto, password: hashedPassword });
   }
@@ -31,13 +41,13 @@ class AuthService {
     return jwtTokens;
   }
 
-  public async refresh(dto: Partial<ITokenPair>): Promise<ITokenPair> {
-    const tokens = await tokenRepository.getByParams({ refreshToken: dto.refreshToken });
-    const newTokens = tokenService.generateTokenPair({ userId: tokens._userId });
+  public async refresh(jwtPayload: ITokenPayload, refreshToken: string): Promise<ITokenPair> {
+    await tokenRepository.deleteOneByParams({ refreshToken });
+    const jwtTokens = tokenService.generateTokenPair({ userId: jwtPayload.userId });
 
-    await tokenRepository.update(tokens._userId, { ...newTokens, _userId: tokens._userId });
+    await tokenRepository.create({ ...jwtTokens, _userId: new Types.ObjectId(jwtPayload.userId) });
 
-    return newTokens;
+    return jwtTokens;
   }
 }
 

@@ -1,5 +1,6 @@
 import { ApiError } from "../errors/api.error";
 import { userRepository } from "../repositories/user.repository";
+import { ITokenPayload } from "../types/token.type";
 import { IUser } from "../types/user.types";
 
 class UserService {
@@ -17,24 +18,34 @@ class UserService {
     return user;
   }
 
-  public async deleteById(id: string): Promise<void> {
-    const users = await userRepository.getById(id);
-
-    if (!users) {
-      throw new ApiError("Users not found", 404);
-    }
-
-    await userRepository.deleteById(id);
-  }
-
-  public async updateById(id: string, dto: Partial<IUser>): Promise<IUser> {
-    const user = await userRepository.getById(id);
+  public async getMe(jwtPayload: ITokenPayload): Promise<IUser> {
+    const user = await userRepository.getById(jwtPayload.userId);
 
     if (!user) {
-      throw new ApiError("User not found", 404);
+      throw new ApiError("User not found", 403);
     }
 
-    return await userRepository.updateById(id, dto);
+    return user;
+  }
+
+  public async updateMe(jwtPayload: ITokenPayload, dto: Partial<IUser>): Promise<IUser> {
+    const user = await userRepository.getById(jwtPayload.userId);
+
+    if (!user) {
+      throw new ApiError("User not found", 403);
+    }
+
+    return await userRepository.updateById(jwtPayload.userId, dto);
+  }
+
+  public async deleteMe(jwtPayload: ITokenPayload): Promise<void> {
+    const users = await userRepository.getById(jwtPayload.userId);
+
+    if (!users) {
+      throw new ApiError("Users not found", 403);
+    }
+
+    await userRepository.deleteById(jwtPayload.userId);
   }
 }
 

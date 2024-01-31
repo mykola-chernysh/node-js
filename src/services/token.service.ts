@@ -6,22 +6,33 @@ import { ITokenPair, ITokenPayload } from "../types/token.type";
 
 class TokenService {
   public generateTokenPair(payload: ITokenPayload): ITokenPair {
-    const accessToken = jwt.sign(payload, configs.JWT_ACCESS_SECRET, { expiresIn: "4h" });
-    const refreshToken = jwt.sign(payload, configs.JWT_REFRESH_SECRET, { expiresIn: "30d" });
+    const accessToken = jwt.sign(payload, configs.JWT_ACCESS_SECRET, { expiresIn: configs.JWT_ACCESS_EXPIRES_IN });
+    const refreshToken = jwt.sign(payload, configs.JWT_REFRESH_SECRET, { expiresIn: configs.JWT_REFRESH_EXPIRES_IN });
 
     return {
       accessToken,
+      accessExpiresIn: configs.JWT_ACCESS_EXPIRES_IN,
       refreshToken,
+      refreshExpiresIn: configs.JWT_REFRESH_EXPIRES_IN,
     };
   }
 
-  public checkRefreshToken(token: string): ITokenPayload {
+  public checkToken(token: string, type: "refresh" | "access"): ITokenPayload {
     try {
-      const refreshSecret = configs.JWT_REFRESH_SECRET;
+      let tokenSecret = "";
 
-      return jwt.verify(token, refreshSecret) as ITokenPayload;
+      switch (type) {
+        case "access":
+          tokenSecret = configs.JWT_ACCESS_SECRET;
+          break;
+        case "refresh":
+          tokenSecret = configs.JWT_REFRESH_SECRET;
+          break;
+      }
+
+      return jwt.verify(token, tokenSecret) as ITokenPayload;
     } catch (e) {
-      throw new ApiError("Invalid token (service)", 401);
+      throw new ApiError("Invalid token", 401);
     }
   }
 }

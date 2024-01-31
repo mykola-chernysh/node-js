@@ -2,7 +2,7 @@ import { NextFunction, Request, Response } from "express";
 
 import { authService } from "../services/auth.service";
 import { ILogin } from "../types/auth.type";
-import { ITokenPair } from "../types/token.type";
+import { ITokenPayload } from "../types/token.type";
 import { IUser } from "../types/user.types";
 
 class AuthController {
@@ -28,12 +28,13 @@ class AuthController {
     }
   }
 
-  public async refreshTokens(req: Request, res: Response, next: NextFunction) {
+  public async refresh(req: Request, res: Response, next: NextFunction) {
     try {
-      const body = req.body as Partial<ITokenPair>;
-      const newTokens = await authService.refresh(body);
+      const jwtPayload = req.res.locals.jwtPayload as ITokenPayload;
+      const refreshToken = req.res.locals.refreshToken as string;
+      const jwtTokens = await authService.refresh(jwtPayload, refreshToken);
 
-      return res.json({ data: newTokens });
+      return res.json({ data: jwtTokens });
     } catch (e) {
       next(e);
     }
