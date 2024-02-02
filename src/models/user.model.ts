@@ -1,5 +1,6 @@
 import { model, Schema } from "mongoose";
 
+import { ERole } from "../enums/role.enum";
 import { IUser } from "../types/user.types";
 
 const userSchema = new Schema(
@@ -23,6 +24,15 @@ const userSchema = new Schema(
     password: {
       type: String,
       require: true,
+    },
+    role: {
+      type: String,
+      enum: ERole,
+      default: ERole.USER,
+    },
+    isVerify: {
+      type: Boolean,
+      default: false,
     },
   },
   {

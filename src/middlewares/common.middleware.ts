@@ -3,7 +3,6 @@ import { ObjectSchema } from "joi";
 import { isObjectIdOrHexString } from "mongoose";
 
 import { ApiError } from "../errors/api.error";
-import { UserValidator } from "../validators/user.validator";
 
 class CommonMiddleware {
   public isIdValid(req: Request, res: Response, next: NextFunction) {
