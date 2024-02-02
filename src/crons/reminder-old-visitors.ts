@@ -11,9 +11,9 @@ dayjs.extend(utc);
 
 const reminderOldVisitors = async function () {
   try {
-    const previousMonth = dayjs().utc().subtract(10, "minutes");
+    const date = dayjs().utc().subtract(10, "minutes").toDate();
 
-    const users = await userRepository.getManyByParams({ createdAt: { $lte: previousMonth } });
+    const users = await userRepository.findWithoutActivityAfter(date);
 
     await Promise.all(
       users.map(async (user) => {

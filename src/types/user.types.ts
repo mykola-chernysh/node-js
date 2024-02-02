@@ -9,4 +9,6 @@ export interface IUser extends Document {
   password: string;
   role: ERole;
   isVerify: boolean;
+  createdAt: string;
+  updatedAt: string;
 }
