@@ -29,5 +29,11 @@ router.put(
 );
 
 router.put("/verify/:token", authController.verify);
+router.post(
+  "/change-password",
+  commonMiddleware.isBodyValid(UserValidator.changePassword),
+  authMiddleware.checkAccessToken(ERole.USER),
+  authController.changePassword,
+);
 
 export const authRouter = router;

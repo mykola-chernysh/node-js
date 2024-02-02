@@ -16,6 +16,10 @@ class UserRepository {
     return await User.findOne(params);
   }
 
+  public async getManyByParams(params: FilterQuery<IUser>) {
+    return await User.find(params);
+  }
+
   public async create(dto: Partial<IUser>): Promise<IUser> {
     return await User.create(dto);
   }

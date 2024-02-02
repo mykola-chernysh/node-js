@@ -26,6 +26,8 @@ class TokenService {
         refreshTokenSecret = configs.JWT_ADMIN_REFRESH_SECRET;
         refreshExpiresIn = configs.JWT_ADMIN_REFRESH_EXPIRES_IN;
         break;
+      default:
+        throw new ApiError("generateTokenPair", 500);
     }
 
     const accessToken = jwt.sign(payload, accessTokenSecret, { expiresIn: accessExpiresIn });
@@ -45,6 +47,8 @@ class TokenService {
         return this.checkTokenAdmin(token, type);
       case ERole.USER:
         return this.checkTokenUser(token, type);
+      default:
+        throw new ApiError("checkAuthToken", 500);
     }
   }
 
@@ -59,6 +63,8 @@ class TokenService {
         case ETokenType.REFRESH:
           tokenSecret = configs.JWT_ADMIN_REFRESH_SECRET;
           break;
+        default:
+          throw new ApiError("checkTokenAdmin", 500);
       }
 
       return jwt.verify(token, tokenSecret) as ITokenPayload;
@@ -78,6 +84,8 @@ class TokenService {
         case ETokenType.REFRESH:
           tokenSecret = configs.JWT_REFRESH_SECRET;
           break;
+        default:
+          throw new ApiError("checkTokenUser", 500);
       }
 
       return jwt.verify(token, tokenSecret) as ITokenPayload;
@@ -97,6 +105,8 @@ class TokenService {
         case EActionTokenType.ACTIVE:
           secret = configs.JWT_FORGOT_ACTION_SECRET;
           break;
+        default:
+          throw new ApiError("checkActionToken", 500);
       }
 
       return jwt.verify(actionToken, secret) as ITokenPayload;
@@ -115,6 +125,8 @@ class TokenService {
       case EActionTokenType.ACTIVE:
         secret = configs.JWT_FORGOT_ACTION_SECRET;
         break;
+      default:
+        throw new ApiError("createActionToken", 500);
     }
 
     return jwt.sign(payload, secret, { expiresIn: configs.JWT_ACTION_EXPIRES_IN });
